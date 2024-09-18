@@ -1,0 +1,19 @@
+apiVersion: cluster.open-cluster-management.io/v1beta1
+kind: Placement
+metadata:
+  name: global-acm-policies
+  namespace: acm-policies
+spec:
+  clusterSets:
+    - global
+  decisionStrategy:
+    groupStrategy:
+      clustersPerDecisionGroup: 0
+  prioritizerPolicy:
+    mode: Additive
+  spreadPolicy: {}
+  tolerations:
+    - key: cluster.open-cluster-management.io/unreachable
+      operator: Equal
+    - key: cluster.open-cluster-management.io/unavailable
+      operator: Equal
