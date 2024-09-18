@@ -1,0 +1,74 @@
+apiVersion: policy.open-cluster-management.io/v1
+kind: Policy
+metadata:
+  name: ldap-oauth-policy
+  namespace: policies 
+spec:
+  remediationAction: enforce
+  disabled: false
+  policy-templates:
+    - objectDefinition:
+        apiVersion: config.openshift.io/v1
+        kind: OAuth
+        metadata:
+          name: cluster
+        spec:
+          identityProviders:
+            - name: <LDAP_NAME>
+              mappingMethod: claim
+              type: LDAP
+              ldap:
+                url: <LDAP_URL>
+                bindDN: "uid=admin,dc=example,dc=com"
+                bindPassword:
+                  name: ldap-bind-secret
+                attributes:
+                  id: ["dn"]
+                  preferredUsername: ["uid"]
+                  name: ["cn"]
+                  email: ["mail"]
+    # Bind Password Secret
+    - objectDefinition:
+        apiVersion: v1
+        kind: Secret
+        metadata:
+          name: ldap-bind-secret
+          namespace: openshift-config
+        type: Opaque
+        stringData:
+          bindPassword: "your-ldap-bind-password"
+    # LDAP CA Certificate ConfigMap
+    - objectDefinition:
+        apiVersion: v1
+        kind: ConfigMap
+        metadata:
+          name: ldap-ca-configmap
+          namespace: openshift-config
+        data:
+          ca.crt: |
+            -----BEGIN CERTIFICATE-----
+            MIIDdzCCAl+gAwIBAgIEbGfz1TANBgkqhkiG9w0BAQsFADBoMQswCQYDVQQGEwJV
+            ...
+            -----END CERTIFICATE-----
+---
+apiVersion: cluster.open-cluster-management.io/v1beta1 
+kind: Placement
+metadata:
+  name: enforce-oauth-ldap-placement
+  namespace: policies
+spec:
+  clusterSelector: {}
+---
+apiVersion: policy.open-cluster-management.io/v1
+kind: PlacementBinding
+metadata:
+  name: enforce-oauth-ldap-binding
+  namespace: policies
+placementRef:
+  apiGroup: cluster.open-cluster-management.io
+  name: enforce-oauth-ldap-placement
+  kind: PlacementRule
+subjects:
+  - apiGroup: policy.open-cluster-management.io
+    kind: Policy
+    name: ldap-oauth-policy

@@ -1,0 +1,11 @@
+---
+apiVersion: agent-install.openshift.io/v1beta1
+kind: InfraEnv
+metadata:
+  name: hosted
+  namespace: hardware-inventory
+spec:
+  additionalNTPSources:
+  - 192.168.125.1
+  pullSecretRef:
+    name: pull-secret
